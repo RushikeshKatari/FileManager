@@ -378,22 +378,25 @@ class StorageService {
    * to the shared database in the background. */
   private async persistRemote() {
     try {
+      const uniqueById = <T extends { id: string }>(items: T[]) =>
+        Array.from(new Map(items.map((item) => [item.id, item])).values());
+
       const writes = [
-        supabase.from('rooms').upsert(this.rooms),
-        supabase.from('cupboards').upsert(this.cupboards.map((c) => ({
+        supabase.from('rooms').upsert(uniqueById(this.rooms)),
+        supabase.from('cupboards').upsert(uniqueById(this.cupboards).map((c) => ({
           id: c.id, room_id: c.roomId, code: c.code, name: c.name, capacity: c.capacity,
         }))),
-        supabase.from('shelves').upsert(this.shelves.map((s) => ({
+        supabase.from('shelves').upsert(uniqueById(this.shelves).map((s) => ({
           id: s.id, cupboard_id: s.cupboardId, room_id: s.roomId, code: s.code, name: s.name, capacity: s.capacity,
         }))),
-        supabase.from('officers').upsert(this.officers.map((o) => ({
+        supabase.from('officers').upsert(uniqueById(this.officers).map((o) => ({
           id: o.id, name: o.name, department: o.department, designation: o.designation,
           email: o.email, desk_number: o.deskNumber, can_generate_qrs: o.canGenerateQRs,
         }))),
-        supabase.from('attenders').upsert(this.attenders.map((a) => ({
+        supabase.from('attenders').upsert(uniqueById(this.attenders).map((a) => ({
           id: a.id, name: a.name, assigned_zone: a.assignedZone, shift: a.shift, phone: a.phone,
         }))),
-        supabase.from('files').upsert(this.files.map((f) => ({
+        supabase.from('files').upsert(uniqueById(this.files).map((f) => ({
           id: f.id, name: f.name, category: f.category, description: f.description, priority: f.priority,
           registered_at: f.registeredAt, status: f.status, home_room_id: f.homeRoomId,
           home_cupboard_id: f.homeCupboardId, home_shelf_id: f.homeShelfId, current_room_id: f.currentRoomId,
@@ -404,7 +407,7 @@ class StorageService {
           in_transit_since: f.inTransitSince, in_transit_from: f.inTransitFrom,
           last_scanned_at: f.lastScannedAt, last_scanned_by: f.lastScannedBy, total_movements: f.totalMovements,
         }))),
-        supabase.from('movements').upsert(this.movements.map((m) => ({
+        supabase.from('movements').upsert(uniqueById(this.movements).map((m) => ({
           id: m.id, timestamp: m.timestamp, file_id: m.fileId, file_name: m.fileName,
           from_location: m.fromLocation, to_location: m.toLocation, action: m.action,
           person_id: m.personId, person_name: m.personName, person_role: m.personRole,
