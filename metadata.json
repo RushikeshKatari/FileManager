@@ -1,0 +1,7 @@
+{
+  "name": "Physical File Tracking System",
+  "description": "Enterprise QR-based physical file tracking system with Admin, Officer, and Attender portals, dual-QR file verification (Keep/Take), location hierarchy, and real-time movement audit trails.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

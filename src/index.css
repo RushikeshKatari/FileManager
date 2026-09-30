@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+code, kbd, samp, pre {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  header, footer, nav, button:not(.print-include) {
+    display: none !important;
+  }
+}
+
