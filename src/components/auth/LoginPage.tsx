@@ -71,8 +71,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   }, []);
 
   const handleQRResult = useCallback(
-    (raw: string) => {
-      const result = loginWithQR(raw);
+    async (raw: string) => {
+      const result = await loginWithQR(raw);
       if (result.success) {
         playScanSound('success');
         setScanSuccess(`Welcome, ${result.user.name}!`);
@@ -203,7 +203,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     setCredLoading(true);
     // Small artificial delay for UX feel
     await new Promise((r) => setTimeout(r, 400));
-    const result = loginWithCredentials(userId, password);
+    const result = await loginWithCredentials(userId, password);
     setCredLoading(false);
     if (result.success) {
       playScanSound('success');

@@ -9,6 +9,7 @@ import {
   ActionType,
   ValidationOutcome,
 } from '../types';
+import { supabase } from '../lib/supabase';
 
 const STORAGE_KEYS = {
   ROOMS: 'pfts_rooms_v1',
@@ -369,6 +370,57 @@ class StorageService {
     } catch (e) {
       console.error('Failed to save to localStorage', e);
     }
+    void this.persistRemote();
+  }
+
+  /** Persist the current service state to Supabase. The UI remains responsive
+   * by updating its local state first, while this sync writes the same records
+   * to the shared database in the background. */
+  private async persistRemote() {
+    try {
+      const writes = [
+        supabase.from('rooms').upsert(this.rooms),
+        supabase.from('cupboards').upsert(this.cupboards.map((c) => ({
+          id: c.id, room_id: c.roomId, code: c.code, name: c.name, capacity: c.capacity,
+        }))),
+        supabase.from('shelves').upsert(this.shelves.map((s) => ({
+          id: s.id, cupboard_id: s.cupboardId, room_id: s.roomId, code: s.code, name: s.name, capacity: s.capacity,
+        }))),
+        supabase.from('officers').upsert(this.officers.map((o) => ({
+          id: o.id, name: o.name, department: o.department, designation: o.designation,
+          email: o.email, desk_number: o.deskNumber, can_generate_qrs: o.canGenerateQRs,
+        }))),
+        supabase.from('attenders').upsert(this.attenders.map((a) => ({
+          id: a.id, name: a.name, assigned_zone: a.assignedZone, shift: a.shift, phone: a.phone,
+        }))),
+        supabase.from('files').upsert(this.files.map((f) => ({
+          id: f.id, name: f.name, category: f.category, description: f.description, priority: f.priority,
+          registered_at: f.registeredAt, status: f.status, home_room_id: f.homeRoomId,
+          home_cupboard_id: f.homeCupboardId, home_shelf_id: f.homeShelfId, current_room_id: f.currentRoomId,
+          current_cupboard_id: f.currentCupboardId, current_shelf_id: f.currentShelfId,
+          current_officer_id: f.currentOfficerId, current_officer_name: f.currentOfficerName,
+          current_officer_dept: f.currentOfficerDept, current_attender_id: f.currentAttenderId,
+          current_attender_name: f.currentAttenderName, officer_received_at: f.officerReceivedAt,
+          in_transit_since: f.inTransitSince, in_transit_from: f.inTransitFrom,
+          last_scanned_at: f.lastScannedAt, last_scanned_by: f.lastScannedBy, total_movements: f.totalMovements,
+        }))),
+        supabase.from('movements').upsert(this.movements.map((m) => ({
+          id: m.id, timestamp: m.timestamp, file_id: m.fileId, file_name: m.fileName,
+          from_location: m.fromLocation, to_location: m.toLocation, action: m.action,
+          person_id: m.personId, person_name: m.personName, person_role: m.personRole,
+          scan_sequence: m.scanSequence, notes: m.notes, status: m.status,
+        }))),
+      ];
+      const results = await Promise.all(writes);
+      const failed = results.find((result) => result.error);
+      if (failed?.error) console.error('Supabase sync failed:', failed.error.message);
+    } catch (error) {
+      console.error('Supabase sync failed:', error);
+    }
+  }
+
+  public async syncToDatabase() {
+    await this.persistRemote();
   }
 
   public subscribe(cb: () => void) {
